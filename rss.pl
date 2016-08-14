@@ -40,7 +40,7 @@ while(@ready = $sel->can_read) {
 				# open feed filehandlers
 				foreach $f (@feed_urls) {
 					print "ADDF ### $f\n";
-					open my $fh, "rsstail -Pltu $f |" or next;
+					open my $fh, "rsstail -Plu $f |" or next;
 					$sel->add($fh);
 				}
 			}
@@ -48,13 +48,16 @@ while(@ready = $sel->can_read) {
 			$h->blocking(0);
 			while(my $l = readline($h)) {
 				print "SEND ### $l";
-				if($l =~ /^(.+) Title: (.+)$/) {
-					$title = uc $2;
-					$date = trim $1;
-					print $socket "privmsg $channels :$title ($date)\n"
+				if($l =~ /^Title: (.+)$/) {
+					$title = trim $1;
+					print $socket "privmsg $channels :$title"
 				} else {
+					# WARNING: HACK!
+					# a huge assumption is made here:
+					# we assume that the title has been printed (without a newline)
+					# so the socket is still waiting for the EOL, which we print here:
 					$l =~ s/Link: //;
-					print $socket "privmsg $channels : $l\n";
+					print $socket " ($l)\n";
 				}
 			}
 			$h->blocking(1);
