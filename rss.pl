@@ -1,12 +1,16 @@
 use IO::Socket;
 use IO::Select;
 use String::Util 'trim';
+
+open (URLF, "<", "urls") or die("failed to open ./urls file");
+chomp(@feed_urls = <URLF>); 
+close(URLF);
+
 $server = 'localhost';
 $port = '6667';
 $channels = '#rss';
 $nick = 'rssbot';
 $username = 'rssbot "" "" :rssbot';
-@feed_urls = ("https://oswatch.net/rss", "https://lobste.rs/rss");
 $socket = IO::Socket::INET->new(
 	PeerAddr => $server,
 	PeerPort => $port,
@@ -36,7 +40,7 @@ while(@ready = $sel->can_read) {
 				# open feed filehandlers
 				foreach $f (@feed_urls) {
 					print "ADDF ### $f\n";
-					open my $fh, "rsstail -ltu $f |";
+					open my $fh, "rsstail -Pltu $f |" or next;
 					$sel->add($fh);
 				}
 			}
